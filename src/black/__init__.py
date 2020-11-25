@@ -1131,7 +1131,7 @@ class DebugVisitor(Visitor[T]):
     tree_depth: int = 0
 
     def visit_default(self, node: LN) -> Iterator[T]:
-        indent = "\t" * self.tree_depth
+        indent = " " * (2 * self.tree_depth)
         if isinstance(node, Node):
             _type = type_repr(node.type)
             out(f"{indent}{_type}", fg="yellow")
@@ -1726,7 +1726,7 @@ class Line:
         if not self:
             return "\n"
 
-        indent = "\t" * self.depth
+        indent = "    " * self.depth
         leaves = iter(self.leaves)
         first = next(leaves)
         res = f"{first.prefix}{indent}{first.value}"
@@ -2041,7 +2041,7 @@ class LineGenerator(Visitor[Line]):
             prefix = get_string_prefix(leaf.value)
             lead_len = len(prefix) + 3
             tail_len = -3
-            indent = "\t" * self.current_line.depth
+            indent = " " * 4 * self.current_line.depth
             docstring = fix_docstring(leaf.value[lead_len:tail_len], indent)
             if docstring:
                 if leaf.value[lead_len - 1] == docstring[0]:
@@ -6636,7 +6636,7 @@ def fix_docstring(docstring: str, prefix: str) -> str:
         return ""
     # Convert tabs to spaces (following the normal Python rules)
     # and split into a list of lines:
-    lines = docstring.replace("    ","\t").splitlines()
+    lines = docstring.expandtabs().splitlines()
     # Determine minimum indentation (first line doesn't count):
     indent = sys.maxsize
     for line in lines[1:]:
