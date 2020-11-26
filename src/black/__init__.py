@@ -364,7 +364,7 @@ def target_version_option_callback(
     "--indent-type",
     type=click.Choice([IndentType.SPACE, IndentType.TAB]),
     default=IndentType.SPACE,
-    help="Select indent of space or tab.",
+    help="Select indent of space or tab for format.",
     show_default=True,
 )
 @click.option(

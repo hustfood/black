@@ -84,8 +84,8 @@ Options:
   -c, --code TEXT                 Format the code passed in as a string.
   -l, --line-length INTEGER       How many characters per line to allow.
                                   [default: 160]
-  --indent-type [space|tab]       Select indent of space or tab.  [default:
-                                  space]
+  --indent-type [space|tab]       Select indent of space or tab for format.
+                                  [default: space]
 
   -t, --target-version [py27|py33|py34|py35|py36|py37|py38]
                                   Python versions that should be supported by
