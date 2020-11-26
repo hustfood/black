@@ -179,7 +179,14 @@ class TargetVersion(Enum):
         return self is TargetVersion.PY27
 
 
+class IndentType(object):
+    SPACE = "space"
+    TAB = "tab"
+
+
 PY36_VERSIONS = {TargetVersion.PY36, TargetVersion.PY37, TargetVersion.PY38}
+
+IS_INDENT_TAB = False
 
 
 class Feature(Enum):
@@ -354,6 +361,13 @@ def target_version_option_callback(
     show_default=True,
 )
 @click.option(
+    "--indent-type",
+    type=click.Choice([IndentType.SPACE, IndentType.TAB]),
+    default=IndentType.SPACE,
+    help="Select indent of space or tab.",
+    show_default=True,
+)
+@click.option(
     "-t",
     "--target-version",
     type=click.Choice([v.name.lower() for v in TargetVersion]),
@@ -489,6 +503,7 @@ def main(
     ctx: click.Context,
     code: Optional[str],
     line_length: int,
+    indent_type: str,
     target_version: List[TargetVersion],
     check: bool,
     diff: bool,
@@ -506,6 +521,9 @@ def main(
     config: Optional[str],
 ) -> None:
     """The uncompromising code formatter."""
+    if indent_type == IndentType.TAB:
+        global IS_INDENT_TAB
+        IS_INDENT_TAB = True
     write_back = WriteBack.from_configuration(check=check, diff=diff, color=color)
     if target_version:
         versions = set(target_version)
@@ -1726,7 +1744,11 @@ class Line:
         if not self:
             return "\n"
 
-        indent = "    " * self.depth
+        if IS_INDENT_TAB:
+            _indent = "\t"
+        else:
+            _indent = "    "
+        indent = _indent * self.depth
         leaves = iter(self.leaves)
         first = next(leaves)
         res = f"{first.prefix}{indent}{first.value}"
@@ -2041,7 +2063,10 @@ class LineGenerator(Visitor[Line]):
             prefix = get_string_prefix(leaf.value)
             lead_len = len(prefix) + 3
             tail_len = -3
-            indent = " " * 4 * self.current_line.depth
+            if IS_INDENT_TAB:
+                indent = "\t" * self.current_line.depth
+            else:
+                indent = " " * 4 * self.current_line.depth
             docstring = fix_docstring(leaf.value[lead_len:tail_len], indent)
             if docstring:
                 if leaf.value[lead_len - 1] == docstring[0]:
@@ -6636,7 +6661,10 @@ def fix_docstring(docstring: str, prefix: str) -> str:
         return ""
     # Convert tabs to spaces (following the normal Python rules)
     # and split into a list of lines:
-    lines = docstring.expandtabs().splitlines()
+    if IS_INDENT_TAB:
+        lines = docstring.replace("    ", "\t").splitlines()
+    else:
+        lines = docstring.expandtabs().splitlines()
     # Determine minimum indentation (first line doesn't count):
     indent = sys.maxsize
     for line in lines[1:]:
